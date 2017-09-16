@@ -1,14 +1,13 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"fmt"
 	"net/http/httputil"
-	"encoding/json"
 )
-
 
 func newApi() *Api {
 
@@ -17,7 +16,7 @@ func newApi() *Api {
 
 	api.pair = "XXBTZEUR"
 	api.publicURL = "https://api.kraken.com/0/public"
-return api
+	return api
 }
 
 type Api struct {
@@ -31,8 +30,8 @@ type Api struct {
 type OHLC struct {
 	Error  []interface{} `json:"error"`
 	Result struct {
-		XXBTZEUR [][]interface{} `json:"XXBTZEUR"`
-		Last     int             `json:"last"`
+		Data [][]interface{} `json:"XXBTZEUR"`
+		Last int             `json:"last"`
 	} `json:"result"`
 }
 
@@ -56,7 +55,7 @@ func (api *Api) doRequest(parameters map[string]string, url string) []byte {
 	// Save a copy of this request for debugging.
 	requestDump, err := httputil.DumpRequest(req, true)
 	if err != nil {
-	  fmt.Println(err)
+		fmt.Println(err)
 	}
 	fmt.Println(string(requestDump))
 	resp, err := api.client.Do(req)
@@ -75,9 +74,9 @@ func (api *Api) doRequest(parameters map[string]string, url string) []byte {
 }
 
 func (api *Api) getOHLC() OHLC {
-	resp := api.doRequest(map[string]string {
-		"interval": "240",
-		"since": "1",
+	resp := api.doRequest(map[string]string{
+		"interval": "60",
+		"since":    "1505550438",
 	}, api.publicURL+"/OHLC")
 	data := OHLC{}
 	json.Unmarshal(resp, &data)
