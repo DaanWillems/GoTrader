@@ -14,7 +14,7 @@ func newApi() *Api {
 	api := &Api{}
 	api.client = &http.Client{}
 
-	api.pair = "XXBTZEUR" //TODO: Hardcoded for now, should be moved to config file
+	api.pair = "XETHZEUR" //TODO: Hardcoded for now, should be moved to config file
 	api.publicURL = "https://api.kraken.com/0/public"
 	return api
 }
@@ -30,7 +30,7 @@ type Api struct {
 type OHLC struct {
 	Error  []interface{} `json:"error"`
 	Result struct {
-		Data [][]interface{} `json:"XXBTZEUR"` //TODO: Hardcoded for now, should be moved to config file
+		Data [][]interface{} `json:"XETHZEUR"` //TODO: Hardcoded for now, should be moved to config file
 		Last int             `json:"last"`
 	} `json:"result"`
 }

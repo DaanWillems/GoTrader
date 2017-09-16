@@ -58,7 +58,7 @@ func Simulate(data [][]interface{}, i int) {
 	next := convertOHLC(data[i+1])
 
 	if position.active {
-		if (current["close"]-position.boughtFor > 50) || (current["close"]-position.boughtFor < -30) {
+		if (current["close"]-position.boughtFor > 30) || (current["close"]-position.boughtFor < -30) || (current["open"]-current["close"] > 0 && current["open"]-current["close"] < 15) {
 			fmt.Println("Leaving position")
 			position.leftAt = getTime(current["time"])
 			position.soldFor = current["close"]
@@ -79,17 +79,29 @@ func Simulate(data [][]interface{}, i int) {
 
 	//Check if current is a hammer
 	var hammer = false
+	var change float64
+	var bottomWick float64
+	var topWick float64
+	//Get size
+	if current["close"] > current["open"] {
+		change = current["close"] - current["open"]
+		bottomWick = current["open"] - current["low"]
+		topWick = current["high"] - current["close"]
+	} else {
+		change = current["open"] - current["close"]
+		bottomWick = current["close"] - current["low"]
+		topWick = current["high"] - current["open"]
+	}
 
 	//Check regular hammer
-	if current["low"] < current["close"] && current["high"] < current["open"]+10 {
-		fmt.Printf("Hammer approved at: %v \n", getTime(current["time"]))
+	if current["close"] > current["open"] && (topWick/change)*100 < 20 && (bottomWick/change)*100 > 100 {
 		hammer = true
 	}
 
-	//Check inverted hammer
-	if current["high"] > current["open"]+20 && current["low"] > current["close"]+10 {
-		hammer = true
-	}
+	// //Check inverted hammer
+	// if current["close"] < current["open"] && (topWick/change)*100 > 110 && (bottomWick/change)*100 < 10 {
+	// 	hammer = true
+	// }
 
 	var nextIsBullish = false
 	var previousIsBullish = false
@@ -108,6 +120,7 @@ func Simulate(data [][]interface{}, i int) {
 		nextIsBullish = true
 	}
 
+	fmt.Printf("Hammer approved at: %v %v %v %v %v %v \n", getTime(current["time"]), change, (topWick/change)*100, (bottomWick/change)*100, previousIsBullish, nextIsBullish)
 	if position.active {
 		if previousIsBullish && !nextIsBullish {
 			fmt.Println("Leaving position")
@@ -128,7 +141,7 @@ func Simulate(data [][]interface{}, i int) {
 		return
 	}
 
-	if !previousIsBullish && nextIsBullish {
+	if previousIsBullish == false && nextIsBullish == true {
 		if !(position.active) {
 			fmt.Println("Establishing position")
 			//If we arrive here everything looks good, so buy
