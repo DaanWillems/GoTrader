@@ -14,7 +14,7 @@ func newApi() *Api {
 	api := &Api{}
 	api.client = &http.Client{}
 
-	api.pair = "XXBTZEUR"
+	api.pair = "XXBTZEUR" //TODO: Hardcoded for now, should be moved to config file
 	api.publicURL = "https://api.kraken.com/0/public"
 	return api
 }
@@ -30,7 +30,7 @@ type Api struct {
 type OHLC struct {
 	Error  []interface{} `json:"error"`
 	Result struct {
-		Data [][]interface{} `json:"XXBTZEUR"`
+		Data [][]interface{} `json:"XXBTZEUR"` //TODO: Hardcoded for now, should be moved to config file
 		Last int             `json:"last"`
 	} `json:"result"`
 }
@@ -76,7 +76,7 @@ func (api *Api) doRequest(parameters map[string]string, url string) []byte {
 func (api *Api) getOHLC() OHLC {
 	resp := api.doRequest(map[string]string{
 		"interval": "60",
-		"since":    "1505550438",
+		"since":    "1494939163",
 	}, api.publicURL+"/OHLC")
 	data := OHLC{}
 	json.Unmarshal(resp, &data)
