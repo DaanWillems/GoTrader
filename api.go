@@ -76,7 +76,7 @@ func (api *Api) doRequest(parameters map[string]string, url string) []byte {
 func (api *Api) getOHLC() OHLC {
 	resp := api.doRequest(map[string]string{
 		"interval": "60",
-		"since":    "1494939163",
+		"since":    "0",
 	}, api.publicURL+"/OHLC")
 	data := OHLC{}
 	json.Unmarshal(resp, &data)

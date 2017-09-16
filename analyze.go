@@ -57,16 +57,37 @@ func Simulate(data [][]interface{}, i int) {
 	}
 	next := convertOHLC(data[i+1])
 
+	if position.active {
+		if (current["close"]-position.boughtFor > 50) || (current["close"]-position.boughtFor < -30) {
+			fmt.Println("Leaving position")
+			position.leftAt = getTime(current["time"])
+			position.soldFor = current["close"]
+
+			diff := position.soldFor - position.boughtFor
+			totalProfit += diff
+			//Pretty print
+			fmt.Printf("Bought at: %v\n", position.enteredAt)
+			fmt.Printf("For: %v\n", position.boughtFor)
+			fmt.Printf("Sold at: %v\n", position.leftAt)
+			fmt.Printf("For: %v\n", position.soldFor)
+			fmt.Printf("Difference is: %v\n", diff)
+			fmt.Println("-------------------------------------------------------")
+			position.active = false
+			return
+		}
+	}
+
 	//Check if current is a hammer
 	var hammer = false
 
 	//Check regular hammer
-	if current["close"] > current["open"] && current["low"] < current["close"]-10 && current["high"] < current["open"]+20 {
+	if current["low"] < current["close"] && current["high"] < current["open"]+10 {
+		fmt.Printf("Hammer approved at: %v \n", getTime(current["time"]))
 		hammer = true
 	}
 
 	//Check inverted hammer
-	if current["close"] > current["open"] && current["high"] > current["open"]+20 && current["low"] > current["close"]+10 {
+	if current["high"] > current["open"]+20 && current["low"] > current["close"]+10 {
 		hammer = true
 	}
 
@@ -87,12 +108,15 @@ func Simulate(data [][]interface{}, i int) {
 		nextIsBullish = true
 	}
 
-	if previousIsBullish && !nextIsBullish {
-		if position.active {
+	if position.active {
+		if previousIsBullish && !nextIsBullish {
 			fmt.Println("Leaving position")
+			position.leftAt = getTime(current["time"])
+			position.soldFor = current["close"]
+
 			diff := position.soldFor - position.boughtFor
 			totalProfit += diff
-			//Pretty print results
+			//Pretty print
 			fmt.Printf("Bought at: %v\n", position.enteredAt)
 			fmt.Printf("For: %v\n", position.boughtFor)
 			fmt.Printf("Sold at: %v\n", position.leftAt)
@@ -101,6 +125,7 @@ func Simulate(data [][]interface{}, i int) {
 			fmt.Println("-------------------------------------------------------")
 			position.active = false
 		}
+		return
 	}
 
 	if !previousIsBullish && nextIsBullish {
@@ -109,14 +134,12 @@ func Simulate(data [][]interface{}, i int) {
 			//If we arrive here everything looks good, so buy
 			position = Position{
 				active:    true,
-				enteredAt: getTime(current["time"]),
-				leftAt:    getTime(next["time"]),
-				boughtFor: current["close"],
-				soldFor:   next["close"],
+				enteredAt: getTime(next["time"]),
+				boughtFor: next["close"],
 			}
 		}
+		return
 	}
-
 }
 
 //W.I.P, checks if a candlestick matches the hammer pattern.
