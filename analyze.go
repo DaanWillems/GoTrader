@@ -9,6 +9,7 @@ import (
 var totalProfit float64 = 0
 var position Position
 var positionOpen = false
+var tradeAmount float64 = 0.01
 
 type Position struct {
 	active    bool
@@ -16,6 +17,71 @@ type Position struct {
 	leftAt    time.Time
 	boughtFor float64
 	soldFor   float64
+}
+
+//Compare two exchanges for arbitrage opportunities
+func compare2(exchanges []Api, profit float64, count int) (float64, int) {
+	var highest Api
+	var lowest Api
+
+	for _, e := range exchanges {
+		e.RenewLast()
+	}
+
+	for i, e := range exchanges {
+		if i == 0 {
+			highest = e
+			lowest = e
+		}
+
+		if e.GetLast() > highest.GetLast() {
+			highest = e
+		}
+
+		if e.GetLast() < lowest.GetLast() {
+			lowest = e
+		}
+	}
+
+	fmt.Printf("Highest: %v %v, lowest: %v %v \n", highest.GetName(), highest.GetLast(), lowest.GetName(), lowest.GetLast())
+
+	v1 := highest.GetLast()
+	v2 := lowest.GetLast()
+
+	var diff float64
+	var currentProfit float64
+	if v1 < v2 {
+		diff = v2 - v1
+		//fmt.Printf("%v is cheaper by %v %v %v \n", api1.GetName(), diff, v1, v2)
+		currentProfit = diff * tradeAmount
+		currentProfit = currentProfit - (currentProfit * highest.GetFee())
+		currentProfit = currentProfit - (currentProfit * lowest.GetFee())
+	} else if v2 < v1 {
+		diff = v1 - v2
+
+		currentProfit = diff * tradeAmount
+		currentProfit = currentProfit - (currentProfit * lowest.GetFee())
+		currentProfit = currentProfit - (currentProfit * highest.GetFee())
+		//fmt.Printf("%v is cheaper by %v %v %v \n", api2.GetName(), diff, v1, v2)
+	}
+
+	if diff > 90 {
+		fmt.Printf("Making trade!, trading %v bitcoin instantly results in %v euro's profit at %v with a difference of %v \n", tradeAmount, currentProfit, time.Now().Format(time.RFC850), diff)
+		profit += currentProfit
+		fmt.Printf("Total profit: %v \n", profit)
+		fmt.Println("---------------------------------------------------------------------------------------------")
+		highest.setBitcoin(tradeAmount - (tradeAmount * 2))
+		highest.setFunds(profit)
+
+		lowest.setBitcoin(tradeAmount)
+		price := lowest.setBitcoin(0) * lowest.GetLast()
+		lowest.setFunds(price - (price * 2))
+		count++
+	} else {
+		fmt.Printf("Diff is %v, not trading \n", diff)
+	}
+
+	return profit, count
 }
 
 //Convert RAW OHLC Data to a neat map
